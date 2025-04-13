@@ -1,0 +1,1319 @@
+const { app, BrowserWindow, ipcMain,dialog, Menu  } = require('electron');
+const path = require('path');
+const database = require('./windows/server/database');
+const BanManager = require('./ban-manager');
+
+let mainWindow;
+let liveTournamentWindow = null;
+let currentTournamentData = null;
+let currentBackgroundColor = '#121212';
+let currentBackgroundImage = null;
+let currentBackgroundVideo = null;
+let currentBackgroundVideoType = null;
+const banManager = new BanManager();
+
+async function checkAppStatus() {
+    try {
+        const status = await banManager.checkStatus();
+        
+        if (status.isBanned) {
+            // Hiển thị dialog thông báo ban
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Ứng dụng bị cấm',
+                message: `Ứng dụng của bạn đã bị cấm!\n\nLý do: ${status.banReason || 'Không có'}\nHết hạn: ${status.banExpiry ? new Date(status.banExpiry).toLocaleDateString('vi-VN') : 'Vĩnh viễn'}`,
+                buttons: ['Đóng'],
+                defaultId: 0
+            }).then(() => {
+                app.quit();
+            });
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi kiểm tra trạng thái:', error);
+        
+        // Kiểm tra trạng thái offline nếu lỗi kết nối
+        const offlineStatus = banManager.readBanStatus();
+        if (offlineStatus.isBanned) {
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Ứng dụng bị cấm (Offline)',
+                message: `Ứng dụng của bạn đã bị cấm!\n\nLý do: ${offlineStatus.banReason || 'Không có'}\nHết hạn: ${offlineStatus.banExpiry ? new Date(offlineStatus.banExpiry).toLocaleDateString('vi-VN') : 'Vĩnh viễn'}`,
+                buttons: ['Đóng'],
+                defaultId: 0
+            }).then(() => {
+                app.quit();
+            });
+            return false;
+        }
+        
+        // Cho phép chạy trong trường hợp lỗi mà không có ban status
+        return true;
+    }
+}
+
+// Kiểm tra trạng thái định kỳ
+function startStatusCheck() {
+    const checkInterval = setInterval(async () => {
+        try {
+            const status = await banManager.checkStatus();
+            if (status.isBanned && mainWindow) {
+                // Gửi thông báo cho renderer process
+                mainWindow.webContents.send('app-banned', status);
+                
+                // Hiển thị dialog thông báo
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Ứng dụng bị cấm',
+                    message: `Ứng dụng của bạn đã bị cấm!\n\nLý do: ${status.banReason || 'Không có'}\nHết hạn: ${status.banExpiry ? new Date(status.banExpiry).toLocaleDateString('vi-VN') : 'Vĩnh viễn'}`,
+                    buttons: ['Đóng'],
+                    defaultId: 0
+                }).then(() => {
+                    clearInterval(checkInterval); // Dừng kiểm tra
+                    app.quit();
+                });
+            }
+        } catch (error) {
+            console.error('Lỗi kiểm tra trạng thái định kỳ:', error);
+            
+            // Kiểm tra trạng thái offline
+            const offlineStatus = banManager.readBanStatus();
+            if (offlineStatus.isBanned && mainWindow) {
+                mainWindow.webContents.send('app-banned', offlineStatus);
+                
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Ứng dụng bị cấm (Offline)',
+                    message: `Ứng dụng của bạn đã bị cấm!\n\nLý do: ${offlineStatus.banReason || 'Không có'}\nHết hạn: ${offlineStatus.banExpiry ? new Date(offlineStatus.banExpiry).toLocaleDateString('vi-VN') : 'Vĩnh viễn'}`,
+                    buttons: ['Đóng'],
+                    defaultId: 0
+                }).then(() => {
+                    clearInterval(checkInterval); // Dừng kiểm tra
+                    app.quit();
+                });
+            }
+        }
+    }, 5000); // Kiểm tra mỗi 5 giây
+    
+    // Lưu interval để có thể dừng khi cần
+    return checkInterval;
+}
+
+async function createWindow() {
+    try {
+        // Khởi tạo database
+        await database.initDatabase();
+
+        // Xóa menu bar hoàn toàn
+        Menu.setApplicationMenu(null);
+
+        // Tạo cửa sổ trình duyệt
+        mainWindow = new BrowserWindow({
+            width: 1200,
+            height: 800,
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                enableRemoteModule: false,
+                preload: path.join(__dirname, 'preload.js')
+            }
+        });
+
+        // Load file index.html
+        mainWindow.loadFile(path.join(__dirname, 'windows/index.html'));
+
+        mainWindow.on('closed', () => {
+            mainWindow = null;
+        });
+    } catch (error) {
+        console.error('Không thể khởi tạo cửa sổ:', error);
+        throw error;
+    }
+}
+
+// Thêm hàm khởi động ứng dụng
+async function initializeApp() {
+    try {
+        // Kiểm tra trạng thái ban trước
+        const canStart = await checkAppStatus();
+        if (!canStart) {
+            console.log('Ứng dụng bị cấm, không thể khởi động');
+            app.quit();
+            return;
+        }
+
+        // Tạo cửa sổ chính
+        await createWindow();
+        
+        // Bắt đầu kiểm tra định kỳ
+        const checkInterval = startStatusCheck();
+        
+        // Dừng kiểm tra khi ứng dụng thoát
+        app.on('before-quit', () => {
+            clearInterval(checkInterval);
+        });
+
+        // Xử lý sự kiện activate cho macOS
+        app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi khởi động ứng dụng:', error);
+        dialog.showMessageBox({
+            type: 'error',
+            title: 'Lỗi khởi động',
+            message: 'Có lỗi xảy ra khi khởi động ứng dụng. Vui lòng thử lại.',
+            buttons: ['Đóng'],
+            defaultId: 0
+        }).then(() => {
+            app.quit();
+        });
+    }
+}
+
+// Khởi động ứng dụng khi sẵn sàng
+app.whenReady().then(initializeApp);
+
+// Thoát app khi tất cả cửa sổ đóng (trừ macOS)
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
+
+// IPC handler để hiển thị thông báo ban từ renderer process
+ipcMain.on('show-ban-dialog', (event, data) => {
+    dialog.showMessageBox({
+        type: 'error',
+        title: 'Ứng dụng hết hạnhạn',
+        message: `Ứng dụng của bạn đã hết hạn!\n\nLý do: ${data.reason}\nHết hạn: ${data.expiry ? new Date(data.expiry).toLocaleDateString('vi-VN') : 'Vĩnh viễn'}`,
+        buttons: ['Đóng'],
+        defaultId: 0
+    }).then(() => {
+        app.quit();
+    });
+});
+
+// Handler cho sự kiện đặt màu nền
+ipcMain.on('set-background-color', (event, color) => {
+    currentBackgroundColor = color;
+    // Nếu cửa sổ live tournament đang mở, gửi màu nền mới tới nó
+    if (liveTournamentWindow) {
+        liveTournamentWindow.webContents.send('background-color-changed', color);
+    }
+});
+
+ipcMain.on('set-background-image', (event, imageUrl) => {
+    currentBackgroundImage = imageUrl;
+    // Nếu cửa sổ live tournament đang mở, gửi ảnh nền mới tới nó
+    if (liveTournamentWindow) {
+        liveTournamentWindow.webContents.send('background-image-changed', imageUrl);
+    }
+});
+
+// Handler cho sự kiện đặt video nền
+ipcMain.on('set-background-video', (event, videoData) => {
+    currentBackgroundVideo = videoData.url;
+    currentBackgroundVideoType = videoData.type;
+    // Nếu cửa sổ live tournament đang mở, gửi video nền mới tới nó
+    if (liveTournamentWindow) {
+        liveTournamentWindow.webContents.send('background-video-changed', videoData);
+    }
+});
+
+function createLiveTournamentWindow() {
+    // Tạo cửa sổ mới cho live tournament
+    liveTournamentWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            enableRemoteModule: false,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+
+    // Xóa menu bar cho cửa sổ live tournament
+    liveTournamentWindow.setMenu(null);
+
+    // Load file live-tournament.html
+    liveTournamentWindow.loadFile(path.join(__dirname, 'windows/live-tournament.html'));
+
+    // Xử lý khi cửa sổ bị đóng
+    liveTournamentWindow.on('closed', () => {
+        liveTournamentWindow = null;
+    });
+
+    // Gửi màu nền hiện tại khi cửa sổ được tạo
+    liveTournamentWindow.webContents.on('did-finish-load', () => {
+        if (currentBackgroundColor) {
+            liveTournamentWindow.webContents.send('background-color-changed', currentBackgroundColor);
+        }
+        if (currentBackgroundImage) {
+            liveTournamentWindow.webContents.send('background-image-changed', currentBackgroundImage);
+        }
+        if (currentBackgroundVideo) {
+            liveTournamentWindow.webContents.send('background-video-changed', {
+                url: currentBackgroundVideo,
+                type: currentBackgroundVideoType
+            });
+        }
+    });
+}
+
+// Xử lý IPC
+ipcMain.on('start-live-tournament', async (event, tournamentData) => {
+    try {
+        // Lưu dữ liệu giải đấu hiện tại
+        currentTournamentData = tournamentData;
+
+        // Tạo cửa sổ live tournament nếu chưa tồn tại
+        if (!liveTournamentWindow) {
+            createLiveTournamentWindow();
+        }
+    } catch (error) {
+        console.error('Lỗi khi bắt đầu live tournament:', error);
+    }
+});
+
+// Handle database operations
+ipcMain.handle('get-tournament-data', async () => {
+    try {
+        const db = database.getDatabase();
+        
+        // Chỉ lấy 2 cột buy_in_price và starting_stack từ bảng tournaments
+        const tournaments = database.executeQueries(`
+            SELECT buy_in_price, starting_stack 
+            FROM tournaments 
+            ORDER BY id DESC LIMIT 1
+        `);
+        console.log('Tournament data:', tournaments);
+
+        if (tournaments && tournaments[0]) {
+            const tournament = tournaments[0];
+            
+            // Trả về dữ liệu với các giá trị từ database
+            const result = {
+                buy_in_price: tournament.buy_in_price / 100, // Chuyển đổi từ cents sang dollars
+                starting_stack: tournament.starting_stack
+            };
+            console.log('Final processed tournament data:', result);
+            return result;
+        }
+        
+        console.log('No tournament data found');
+        return null;
+    } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu giải đấu:', error);
+        return null;
+    }
+});
+
+// Handler mới để lấy tên giải đấu
+ipcMain.handle('get-tournament-name', async () => {
+    try {
+        // Lấy tên giải đấu từ database
+        const tournaments = database.executeQueries(`
+            SELECT name 
+            FROM tournaments 
+            ORDER BY id DESC LIMIT 1
+        `);
+        
+        console.log('Tournament name data:', tournaments);
+
+        if (tournaments && tournaments[0] && tournaments[0].name) {
+            return tournaments[0].name;
+        }
+        
+        // Trả về tên mặc định nếu không tìm thấy
+        console.log('No tournament name found, returning default');
+        return "POKER TOURNAMENT";
+    } catch (error) {
+        console.error('Lỗi khi lấy tên giải đấu:', error);
+        // Trả về tên mặc định nếu có lỗi
+        return "POKER TOURNAMENT";
+    }
+});
+
+// Xử lý timer control
+ipcMain.handle('timer-control', async (event, action) => {
+    if (liveTournamentWindow) {
+        liveTournamentWindow.webContents.send('timer-control', action);
+    }
+});
+
+// Xử lý minimize window
+ipcMain.on('minimize-window', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) {
+        window.minimize();
+    } else if (liveTournamentWindow) {
+        liveTournamentWindow.minimize();
+    }
+});
+
+// Xử lý hiển thị bảng điểm
+ipcMain.handle('show-leaderboard', async (event, action) => {
+    if (liveTournamentWindow) {
+        liveTournamentWindow.webContents.send('show-leaderboard', action);
+        return { success: true };
+    }
+    return { success: false, error: 'Màn hình live tournament chưa được mở' };
+});
+
+// Xử lý lưu dữ liệu tournament
+ipcMain.handle('save-tournament-data', async (event, data) => {
+    try {
+        const db = database.getDatabase();
+        
+        // Kiểm tra xem đã có tournament chưa
+        const existingTournament = database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+
+        if (existingTournament && existingTournament[0]) {
+            // Cập nhật tournament hiện có
+            database.executeQuery(`
+                UPDATE tournaments 
+                SET name = ?, 
+                    location = ?, 
+                    buy_in_price = ?,
+                    starting_stack = ?,
+                    currency = ?,
+                    charge_rake = ?,
+                    rake_amount = ?
+                WHERE id = ?
+            `, [
+                data.name,
+                data.location,
+                Math.round(data.buy_in_price * 100), // Chuyển đổi sang cents
+                data.starting_stack,
+                data.currency,
+                data.charge_rake ? 1 : 0,
+                Math.round(data.rake_amount * 100), // Chuyển đổi sang cents
+                existingTournament[0].id
+            ]);
+        } else {
+            // Tạo tournament mới
+            database.executeQuery(`
+                INSERT INTO tournaments (
+                    name, location, buy_in_price, starting_stack,
+                    currency, charge_rake, rake_amount
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [
+                data.name,
+                data.location,
+                Math.round(data.buy_in_price * 100), // Chuyển đổi sang cents
+                data.starting_stack,
+                data.currency,
+                data.charge_rake ? 1 : 0,
+                Math.round(data.rake_amount * 100)  // Chuyển đổi sang cents
+            ]);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Lỗi khi lưu dữ liệu tournament:', error);
+        throw error;
+    }
+});
+
+// Handler cho blind structure
+ipcMain.handle('get-blind-structure', async () => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+        console.log('Tournament ID:', tournament_id);
+
+        // Lấy tất cả dữ liệu từ blind structure theo thứ tự id
+        const allData = await database.executeQueries(`
+            SELECT id, level, duration_minutes, small_blind, big_blind, ante, is_break
+            FROM blind_structure 
+            WHERE tournament_id = ?
+            ORDER BY id ASC
+        `, [tournament_id]);
+
+        // Xử lý riêng cho levels (không bao gồm breaks)
+        const levels = allData.filter(item => item.is_break === 0);
+        
+        // Đánh số lại các level từ 1 đến n
+        for (let i = 0; i < levels.length; i++) {
+            const level = levels[i];
+            const newLevelNumber = i + 1;
+            
+            // Cập nhật số level trong database
+            if (level.level !== newLevelNumber) {
+                await database.executeQuery(`
+                    UPDATE blind_structure 
+                    SET level = ? 
+                    WHERE id = ? AND tournament_id = ?
+                `, [newLevelNumber, level.id, tournament_id]);
+                
+                // Cập nhật lại trong object
+                level.level = newLevelNumber;
+            }
+        }
+
+        // Kết hợp lại kết quả theo thứ tự id ban đầu
+        const result = allData.map(item => {
+            if (item.is_break === 1) {
+                // Giữ nguyên break
+                return {
+                    ...item,
+                    level: 0  // Đảm bảo break luôn có level = 0
+                };
+            } else {
+                // Lấy level đã được cập nhật số thứ tự
+                return levels.find(l => l.id === item.id);
+            }
+        });
+
+        console.log('Blind structure from DB:', result);
+        return result;
+    } catch (error) {
+        console.error('Lỗi khi lấy cấu trúc blind:', error);
+        throw error;
+    }
+});
+
+ipcMain.handle('save-blind-structure', async (event, data) => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+
+        // Xóa tất cả blind structure cũ
+        await database.executeQuery(
+            'DELETE FROM blind_structure WHERE tournament_id = ?',
+            [tournament_id]
+        );
+
+        // Thêm lại từng level mới với thứ tự đúng
+        const insertQuery = `INSERT INTO blind_structure 
+            (tournament_id, level, duration_minutes, small_blind, big_blind, ante, is_break) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    
+        // Đếm số level thực (không phải break) để đánh số
+        let currentLevel = 1;
+        
+        // Lưu theo đúng thứ tự trong data
+        for (let i = 0; i < data.length; i++) {
+            const item = data[i];
+            // Kiểm tra và đảm bảo các giá trị không undefined
+            const small_blind = item.small_blind || 0;
+            const big_blind = item.big_blind || 0;
+            const ante = item.ante || 0;
+            // Không cần chuyển đổi duration_minutes vì đã được chuyển từ blind-structure.js
+            const duration_minutes = item.duration_minutes || 0;
+
+            // Nếu là break thì level = 0, còn không thì tăng level
+            const level_number = item.is_break ? 0 : currentLevel++;
+
+            await database.executeQuery(insertQuery, [
+                tournament_id,
+                level_number,
+                duration_minutes, // Giữ nguyên giá trị đã được chuyển đổi
+                small_blind,
+                big_blind,
+                ante,
+                item.is_break ? 1 : 0
+            ]);
+        }
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi lưu cấu trúc blind:', error);
+        throw error;
+    }
+});
+
+// Handler để lấy blind defaults
+ipcMain.handle('get-blind-defaults', async () => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+        
+        // Lấy blind defaults của tournament hiện tại
+        const defaults = await database.executeQueries(`
+            SELECT * FROM blind_structure 
+            WHERE tournament_id = ? 
+            ORDER BY id DESC LIMIT 1
+        `, [tournament_id]);
+
+        if (defaults && defaults[0]) {
+            return {
+                level_duration: defaults[0].level_duration || 15,
+                break_duration: defaults[0].break_duration || 10,
+                ante_type: defaults[0].ante_type || 'percentage',
+                blind_increase_percent: defaults[0].blind_increase_percent || 25,
+                final_reentry_level: defaults[0].final_reentry_level || 0
+            };
+        }
+
+        // Trả về giá trị mặc định nếu không có dữ liệu
+        return {
+            level_duration: 15,
+            break_duration: 10,
+            ante_type: 'percentage',
+            blind_increase_percent: 25,
+            final_reentry_level: 0
+        };
+    } catch (error) {
+        console.error('Lỗi khi lấy blind defaults:', error);
+        throw error;
+    }
+});
+
+// Handler để lưu blind defaults
+ipcMain.handle('save-blind-defaults', async (event, data) => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+
+        // Kiểm tra xem đã có defaults chưa
+        const existingDefaults = await database.executeQueries(`
+            SELECT id FROM blind_structure 
+            WHERE tournament_id = ?
+        `, [tournament_id]);
+
+        if (existingDefaults && existingDefaults[0]) {
+            // Cập nhật defaults hiện có
+            await database.executeQuery(`
+                UPDATE blind_structure 
+                SET level_duration = ?,
+                    break_duration = ?,
+                    ante_type = ?,
+                    blind_increase_percent = ?,
+                    final_reentry_level = ?
+                WHERE tournament_id = ?
+            `, [
+                data.level_duration,
+                data.break_duration,
+                data.ante_type,
+                data.blind_increase_percent,
+                data.final_reentry_level,
+                tournament_id
+            ]);
+        } else {
+            // Tạo defaults mới
+            await database.executeQuery(`
+                INSERT INTO blind_structure (
+                    tournament_id,
+                    level_duration,
+                    break_duration,
+                    ante_type,
+                    blind_increase_percent,
+                    final_reentry_level
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            `, [
+                tournament_id,
+                data.level_duration,
+                data.break_duration,
+                data.ante_type,
+                data.blind_increase_percent,
+                data.final_reentry_level
+            ]);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi lưu blind defaults:', error);
+        throw error;
+    }
+});
+
+ipcMain.handle('add-blind-level', async (event, data) => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+
+        // Không cần chuyển đổi duration vì đã được chuyển từ blind-structure.js
+        const duration_minutes = data.duration_minutes || 0;
+
+        const query = `INSERT INTO blind_structure 
+            (tournament_id, level, duration_minutes, small_blind, big_blind, ante, is_break) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        
+        if (data.is_break) {
+            // Nếu là break thì chỉ cần duration, các giá trị khác là 0
+            await database.executeQuery(query, [
+                tournament_id,
+                0, // level = 0 cho break
+                duration_minutes,
+                0, // small_blind
+                0, // big_blind
+                0, // ante
+                1  // is_break = true
+            ]);
+        } else {
+            // Nếu là level bình thường
+            await database.executeQuery(query, [
+                tournament_id,
+                data.level_number,
+                duration_minutes,
+                data.small_blind || 0,
+                data.big_blind || 0,
+                data.ante || 0,
+                0  // is_break = false
+            ]);
+        }
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi thêm level blind:', error);
+        throw error;
+    }
+});
+
+ipcMain.handle('delete-blind-level', async (event, data) => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+
+        // Xử lý khác nhau cho break và level
+        if (data.isBreak) {
+            // Xóa break dựa trên vị trí của nó trong bảng
+            await database.executeQuery(
+                'DELETE FROM blind_structure WHERE tournament_id = ? AND is_break = 1 AND level = 0', 
+                [tournament_id]
+            );
+        } else {
+            // Xóa level dựa trên level number
+            await database.executeQuery(
+                'DELETE FROM blind_structure WHERE tournament_id = ? AND level = ? AND is_break = 0', 
+                [tournament_id, data.level]
+            );
+
+            // Lấy tất cả level còn lại (không bao gồm break) và sắp xếp theo id
+            const remainingLevels = await database.executeQueries(`
+                SELECT id, level 
+                FROM blind_structure 
+                WHERE tournament_id = ? AND is_break = 0
+                ORDER BY id ASC
+            `, [tournament_id]);
+
+            // Cập nhật lại số thứ tự từ 1 đến n
+            for (let i = 0; i < remainingLevels.length; i++) {
+                await database.executeQuery(`
+                    UPDATE blind_structure 
+                    SET level = ? 
+                    WHERE id = ? AND tournament_id = ?
+                `, [i + 1, remainingLevels[i].id, tournament_id]);
+            }
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi xóa level/break:', error);
+        throw error;
+    }
+});
+
+// Handler cho reentries data (giữ lại phiên bản mới nhất)
+ipcMain.handle('get-reentries-data', async () => {
+    try {
+        const db = database.getDatabase();
+        
+        // Kiểm tra xem đã có tournament chưa
+        const existingTournament = database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+
+        if (existingTournament && existingTournament[0]) {
+            // Lấy dữ liệu reentries của tournament hiện tại
+            const reentriesData = database.executeQueries(`
+                SELECT * FROM reentries_addons 
+                WHERE tournament_id = ? 
+                ORDER BY id DESC LIMIT 1
+            `, [existingTournament[0].id]);
+
+            if (reentriesData && reentriesData[0]) {
+                const data = reentriesData[0];
+                return {
+                    allow_reentry: data.allow_reentry,
+                    reentry_limit: data.reentry_limit,
+                    allow_addon: data.allow_addon,
+                    addon_price: data.addon_price / 100,
+                    addon_chips: data.addon_chips
+                };
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu reentries:', error);
+        return null;
+    }
+});
+
+// Xử lý lưu dữ liệu reentries
+ipcMain.handle('save-reentries-data', async (event, data) => {
+    try {
+        const db = database.getDatabase();
+        
+        // Lấy bản ghi đầu tiên từ bảng reentries_addons
+        const existingReentries = database.executeQueries(`
+            SELECT * FROM reentries_addons 
+            ORDER BY id ASC LIMIT 1
+        `);
+
+        if (existingReentries && existingReentries[0]) {
+            // Tạo câu lệnh UPDATE động dựa trên các trường được thay đổi
+            const updateFields = [];
+            const updateValues = [];
+            
+            if ('allow_reentry' in data) {
+                updateFields.push('allow_reentry = ?');
+                updateValues.push(data.allow_reentry);
+            }
+            if ('reentry_limit' in data) {
+                updateFields.push('reentry_limit = ?');
+                updateValues.push(data.reentry_limit);
+            }
+            if ('allow_addon' in data) {
+                updateFields.push('allow_addon = ?');
+                updateValues.push(data.allow_addon);
+            }
+            if ('addon_price' in data) {
+                updateFields.push('addon_price = ?');
+                updateValues.push(Math.round(data.addon_price * 100)); // Chuyển đổi sang cents
+            }
+            if ('addon_chips' in data) {
+                updateFields.push('addon_chips = ?');
+                updateValues.push(data.addon_chips);
+            }
+
+            // Thêm id vào cuối mảng values
+            updateValues.push(existingReentries[0].id);
+
+            // Thực hiện câu lệnh UPDATE
+            if (updateFields.length > 0) {
+                database.executeQuery(`
+                    UPDATE reentries_addons 
+                    SET ${updateFields.join(', ')}
+                    WHERE id = ?
+                `, updateValues);
+            }
+
+            return { success: true };
+        }
+
+        throw new Error('Không tìm thấy bản ghi reentries_addons');
+    } catch (error) {
+        console.error('Lỗi khi lưu dữ liệu reentries:', error);
+        throw error;
+    }
+});
+
+// Handler để reset blind structure
+ipcMain.handle('resetBlindStructure', async () => {
+    try {
+        // Lấy tournament_id hiện tại
+        const tournament = await database.executeQueries(`
+            SELECT id FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+        
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy tournament');
+        }
+
+        const tournament_id = tournament[0].id;
+
+        // Xóa toàn bộ dữ liệu trong bảng blind_structure cho tournament hiện tại
+        await database.executeQuery(
+            'DELETE FROM blind_structure WHERE tournament_id = ?',
+            [tournament_id]
+        );
+
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi reset blind structure:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật tournament stats
+ipcMain.handle('update-tournament-stats', async (event, data) => {
+    try {
+        console.log('=== Start update-tournament-stats ===');
+        console.log('Input data:', data);
+
+        // Lấy thông tin tournament
+        const tournament = await database.executeQueries(`
+            SELECT name, buy_in_price, starting_stack FROM tournaments ORDER BY id DESC LIMIT 1
+        `);
+
+        if (!tournament || !tournament[0]) {
+            throw new Error('Không tìm thấy dữ liệu tournament');
+        }
+
+        // Lấy stats hiện tại
+        const currentStats = await database.executeQueries(`
+            SELECT * FROM tournament_stats LIMIT 1
+        `);
+
+        if (!currentStats || !currentStats[0]) {
+            throw new Error('Không tìm thấy dữ liệu tournament stats');
+        }
+
+        // Chuẩn bị dữ liệu để cập nhật
+        const updateData = {
+            ...currentStats[0],
+            ...data
+        };
+
+        // Tính toán total_chips dựa trên entries và reentries
+        let totalChips = 0;
+
+        // Tính chips từ entries
+        const totalEntries = data.total_entries ?? currentStats[0].total_entries;
+        totalChips += totalEntries * tournament[0].starting_stack;
+
+        // Tính chips từ reentries
+        const reentries = data.reentries ?? currentStats[0].reentries;
+        // Sử dụng rebuy_stack thay vì starting_stack cho reentries
+        totalChips += reentries * currentStats[0].rebuy_stack;
+
+        // Tính chips từ addons
+        const addons = data.addons ?? currentStats[0].addons;
+        if (addons > 0) {
+            const reentriesData = await database.executeQueries(`
+                SELECT addon_chips FROM reentries_addons LIMIT 1
+            `);
+            if (reentriesData && reentriesData[0]) {
+                totalChips += addons * reentriesData[0].addon_chips;
+            }
+        }
+
+        // Cập nhật total_chips
+        updateData.total_chips = totalChips;
+
+        // Tính average_stack
+        updateData.average_stack = updateData.players_left > 0 ? 
+            Math.floor(updateData.total_chips / updateData.players_left) : 0;
+
+        // Cập nhật database
+        await database.executeQuery(`
+            UPDATE tournament_stats 
+            SET total_entries = COALESCE(?, total_entries),
+                players_left = COALESCE(?, players_left),
+                reentries = COALESCE(?, reentries),
+                addons = COALESCE(?, addons),
+                total_chips = ?,
+                average_stack = ?
+            WHERE id = ?
+        `, [
+            updateData.total_entries,
+            updateData.players_left,
+            updateData.reentries,
+            updateData.addons,
+            updateData.total_chips,
+            updateData.average_stack,
+            currentStats[0].id
+        ]);
+
+        console.log('Updated stats:', updateData);
+
+        // Gửi dữ liệu đến cửa sổ live tournament nếu có
+        if (liveTournamentWindow) {
+            const updatedStats = {
+                ...updateData,
+                name: tournament[0].name,  // Thêm tên giải đấu
+                buy_in_price: tournament[0].buy_in_price / 100,
+                starting_stack: tournament[0].starting_stack
+            };
+            liveTournamentWindow.webContents.send('tournament-data', updatedStats);
+        }
+
+        console.log('=== End update-tournament-stats ===');
+        return updateData;
+
+    } catch (error) {
+        console.error('Error in update-tournament-stats:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        throw error;
+    }
+});
+
+// Lấy dữ liệu tournament stats
+ipcMain.handle('getTournamentStats', async () => {
+    try {
+        const result = await database.executeQuery('SELECT * FROM tournament_stats LIMIT 1');
+        return result[0] || {};
+    } catch (error) {
+        console.error('Lỗi khi lấy tournament stats:', error);
+        throw error;
+    }
+});
+
+// Cập nhật tournament stats
+ipcMain.handle('updateTournamentStats', async (event, data) => {
+    try {
+        const setClause = Object.keys(data)
+            .map(key => `${key} = ?`)
+            .join(', ');
+        const values = Object.values(data);
+        
+        const query = `UPDATE tournament_stats SET ${setClause}`;
+        await database.executeQuery(query, values);
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi cập nhật tournament stats:', error);
+        throw error;
+    }
+});
+
+// Thêm handler để lấy tournament stats
+ipcMain.handle('get-tournament-stats', async () => {
+    try {
+        console.log('=== Start get-tournament-stats ===');
+        const stats = await database.executeQueries(`
+            SELECT * FROM tournament_stats ORDER BY id DESC LIMIT 1
+        `);
+        console.log('Tournament stats:', stats);
+        console.log('=== End get-tournament-stats ===');
+        return stats;
+    } catch (error) {
+        console.error('Error in get-tournament-stats:', error);
+        throw error;
+    }
+});
+
+// Handler để reset toàn bộ database
+ipcMain.handle('reset-database', async () => {
+    try {
+        console.log('=== Bắt đầu reset database ===');
+        
+        // Reset tournament_stats
+        await database.executeQuery(`
+            UPDATE tournament_stats 
+            SET total_entries = 0,
+                players_left = 0,
+                reentries = 0,
+                addons = 0,
+                total_chips = 0,
+                average_stack = 0
+            WHERE id = (SELECT id FROM tournament_stats LIMIT 1)
+        `);
+
+        // Reset blind_structure
+        await database.executeQuery('DELETE FROM blind_structure');
+
+        // Reset reentries_addons về giá trị mặc định
+        await database.executeQuery(`
+            UPDATE reentries_addons 
+            SET allow_reentry = 0,
+                reentry_limit = 2,
+                allow_addon = 0,
+                addon_price = 500,
+                addon_chips = 5000
+            WHERE id = (SELECT id FROM reentries_addons LIMIT 1)
+        `);
+
+        // Reset tournaments về giá trị mặc định
+        await database.executeQuery(`
+            UPDATE tournaments 
+            SET buy_in_price = 1000,
+                starting_stack = 10000,
+                freeroll = 0,
+                charge_rake = 1,
+                rake_amount = 100
+            WHERE id = (SELECT id FROM tournaments LIMIT 1)
+        `);
+
+        // Reset players table
+        await database.executeQuery('DELETE FROM players');
+        await database.executeQuery('DELETE FROM sqlite_sequence WHERE name = "players"');
+
+        console.log('=== Reset database thành công ===');
+        return { success: true };
+    } catch (error) {
+        console.error('Lỗi khi reset database:', error);
+        throw error;
+    }
+});
+
+// Handler để thêm player mới
+ipcMain.handle('add-player', async (event, playerData) => {
+    try {
+        const result = await database.executeQuery(`
+            INSERT INTO players (
+                avatar, name, win1_sng, win2_sng, win3_sng,
+                win1_tour, win2_tour, win3_tour, points
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`,
+            `Người chơi ${Math.floor(Math.random() * 1000)}`,
+            0, // win1_sng
+            0, // win2_sng
+            0, // win3_sng
+            0, // win1_tour
+            0, // win2_tour
+            0, // win3_tour
+            0  // points
+        ]);
+        return result;
+    } catch (error) {
+        console.error('Lỗi khi thêm player:', error);
+        throw error;
+    }
+});
+
+// Handler để xóa player
+ipcMain.handle('delete-player', async (event, playerId) => {
+    try {
+        await database.executeQuery('DELETE FROM players WHERE id = ?', [playerId]);
+        return true;
+    } catch (error) {
+        console.error('Lỗi khi xóa player:', error);
+        throw error;
+    }
+});
+
+// Handler để lấy danh sách players
+ipcMain.handle('get-players', async () => {
+    try {
+        const players = await database.executeQueries('SELECT * FROM players ORDER BY points DESC');
+        return players;
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách players:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật avatar của player
+ipcMain.handle('update-player-avatar', async (event, playerId, avatarBase64) => {
+    try {
+        const result = await database.executeQuery(`
+            UPDATE players 
+            SET avatar = ? 
+            WHERE id = ?
+        `, [avatarBase64, playerId]);
+        return result;
+    } catch (error) {
+        console.error('Lỗi khi cập nhật avatar:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật tên của player
+ipcMain.handle('update-player-name', async (event, playerId, newName) => {
+    try {
+        const result = await database.executeQuery(`
+            UPDATE players 
+            SET name = ? 
+            WHERE id = ?
+        `, [newName, playerId]);
+        return result;
+    } catch (error) {
+        console.error('Lỗi khi cập nhật tên:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật điểm của player
+ipcMain.handle('update-player-score', async (event, playerId, winType, newValue) => {
+    try {
+        // Cập nhật điểm cho loại win cụ thể
+        await database.executeQuery(`
+            UPDATE players 
+            SET ${winType} = ? 
+            WHERE id = ?
+        `, [newValue, playerId]);
+
+        // Lấy tất cả điểm của player để tính tổng
+        const playerData = await database.executeQueries(`
+            SELECT win1_sng, win2_sng, win3_sng, win1_tour, win2_tour, win3_tour
+            FROM players 
+            WHERE id = ?
+        `, [playerId]);
+
+        // Lấy cấu hình điểm từ bảng point_config
+        const pointConfig = await database.executeQueries(`
+            SELECT * FROM point_config ORDER BY id DESC LIMIT 1
+        `);
+
+        if (playerData && playerData[0] && pointConfig && pointConfig[0]) {
+            // Tính tổng điểm mới dựa trên cấu hình từ database
+            const totalPoints = (
+                (playerData[0].win1_sng || 0) * pointConfig[0].win1_sng_points +
+                (playerData[0].win2_sng || 0) * pointConfig[0].win2_sng_points +
+                (playerData[0].win3_sng || 0) * pointConfig[0].win3_sng_points +
+                (playerData[0].win1_tour || 0) * pointConfig[0].win1_tour_points +
+                (playerData[0].win2_tour || 0) * pointConfig[0].win2_tour_points +
+                (playerData[0].win3_tour || 0) * pointConfig[0].win3_tour_points
+            );
+
+            // Cập nhật tổng điểm vào database
+            await database.executeQuery(`
+                UPDATE players 
+                SET points = ? 
+                WHERE id = ?
+            `, [totalPoints, playerId]);
+
+            // Trả về điểm mới để cập nhật giao diện
+            return { points: totalPoints };
+        }
+        throw new Error('Không tìm thấy thông tin người chơi hoặc cấu hình điểm');
+    } catch (error) {
+        console.error('Lỗi khi cập nhật điểm:', error);
+        throw error;
+    }
+});
+
+// Handler để lấy cấu hình điểm
+ipcMain.handle('get-point-config', async () => {
+    try {
+        const pointConfig = await database.executeQueries(`
+            SELECT * FROM point_config ORDER BY id DESC LIMIT 1
+        `);
+        return pointConfig && pointConfig[0] ? pointConfig[0] : null;
+    } catch (error) {
+        console.error('Lỗi khi lấy cấu hình điểm:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật cấu hình điểm
+ipcMain.handle('update-point-config', async (event, data) => {
+    try {
+        // Cập nhật điểm trong database
+        await database.executeQuery(`
+            UPDATE point_config 
+            SET win1_sng_points = ?,
+                win2_sng_points = ?,
+                win3_sng_points = ?,
+                win1_tour_points = ?,
+                win2_tour_points = ?,
+                win3_tour_points = ?
+            WHERE id = (SELECT id FROM point_config ORDER BY id DESC LIMIT 1)
+        `, [
+            data.win1_sng_points,
+            data.win2_sng_points,
+            data.win3_sng_points,
+            data.win1_tour_points,
+            data.win2_tour_points,
+            data.win3_tour_points
+        ]);
+
+        // Cập nhật lại điểm cho tất cả players
+        const players = await database.executeQueries('SELECT * FROM players');
+        for (const player of players) {
+            const totalPoints = (
+                (player.win1_sng || 0) * data.win1_sng_points +
+                (player.win2_sng || 0) * data.win2_sng_points +
+                (player.win3_sng || 0) * data.win3_sng_points +
+                (player.win1_tour || 0) * data.win1_tour_points +
+                (player.win2_tour || 0) * data.win2_tour_points +
+                (player.win3_tour || 0) * data.win3_tour_points
+            );
+
+            await database.executeQuery(`
+                UPDATE players 
+                SET points = ? 
+                WHERE id = ?
+            `, [totalPoints, player.id]);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Lỗi khi cập nhật cấu hình điểm:', error);
+        throw error;
+    }
+});
+
+// Handler để cập nhật trạng thái người chơi
+ipcMain.handle('update-player-status', async (event, playerId, newStatus) => {
+    try {
+        // Kiểm tra tham số
+        if (!playerId) {
+            throw new Error('Thiếu ID người chơi');
+        }
+        if (!newStatus) {
+            throw new Error('Thiếu trạng thái mới');
+        }
+
+        console.log('Cập nhật trạng thái:', { playerId, newStatus });
+
+        const result = await database.executeQuery(`
+            UPDATE players 
+            SET status = ? 
+            WHERE id = ?
+        `, [newStatus, playerId]);
+
+        // Kiểm tra kết quả cập nhật
+        if (result) {
+            console.log('Cập nhật trạng thái thành công');
+            return { success: true, status: newStatus };
+        } else {
+            throw new Error('Không thể cập nhật trạng thái');
+        }
+    } catch (error) {
+        console.error('Lỗi khi cập nhật trạng thái người chơi:', error);
+        throw error;
+    }
+});
+
+// Handler để thực hiện truy vấn SQL trực tiếp
+ipcMain.handle('execute-query', async (event, sql, params = []) => {
+    try {
+        const result = await database.executeQuery(sql, params);
+        return result;
+    } catch (error) {
+        console.error('Lỗi khi thực hiện truy vấn SQL:', error);
+        throw error;
+    }
+});

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Pro</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/notifications.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Poker Pro</h1>
+
+        <div class="steps-container">
+            <div class="step active">
+                <span class="step-number">1</span>
+                <h2>Tournament Information</h2>
+
+                <div class="form-content">
+                    <div class="form-group">
+                        <label for="tournamentName">Tournament name*</label>
+                        <input type="text" id="tournamentName" placeholder="Nhập tên cho giải đấu">
+                        <small>Provide a speaking name for your Tournament</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" placeholder="Nhập địa điểm">
+                        <small>Where will the tournament take place?</small>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label-row">
+                            <label for="buyInPrice">Buy In price</label>
+                            <label for="startingStack" style="text-align: right;">Starting stack*</label>
+                        </div>
+                        <div class="form-row">
+                            <div class="number-input">
+                                <button class="decrease">-</button>
+                                <input type="number" id="buyInPrice" class="buy-in-input" min="0" step="0.50"
+                                    value="10.00">
+                                <button class="increase">+</button>
+                            </div>
+                            <div class="number-input">
+                                <button class="decrease">-</button>
+                                <input type="number" id="startingStack" class="starting-stack-input" min="0" step="1000"
+                                    value="10000">
+                                <button class="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <div class="currency-select">
+                            <input type="text" value="$12.50" readonly>
+                            <select>
+                                <option value="USD">Dollar</option>
+                                <option value="EUR">Euro</option>
+                                <option value="VND">VND</option>
+                            </select>
+                        </div>
+                        <small>Also formats large numbers accordingly to this locale</small>
+                    </div>
+
+                    <div class="form-group switch-group">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Charge Tournament Fee / Rake</span>
+                    </div>
+
+                    <div class="fee-group hidden">
+                        <div class="number-input">
+                            <button class="decrease">-</button>
+                            <input type="number" class="rake-amount-input" min="0" step="0.50" value="0.00">
+                            <button class="increase">+</button>
+                        </div>
+                        <small>This amount will be added to the buy-in</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <h2>Reentries & Addons</h2>
+                <div class="form-content hidden">
+                    <div class="reentry-section">
+                        <div class="form-group switch-group">
+                            <label class="switch">
+                                <input type="checkbox" id="allowReentry">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Allow reentry</span>
+                        </div>
+
+                        <div class="form-group reentry-limit hidden">
+                            <label>How many reentries allowed? (per Player)</label>
+                            <div class="number-input">
+                                <button class="decrease">-</button>
+                                <input type="number" value="1" min="1" step="1">
+                                <button class="increase">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="addon-section">
+                        <div class="form-group switch-group">
+                            <label class="switch">
+                                <input type="checkbox" id="allowAddons">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Allow Add-Ons</span>
+                        </div>
+
+                        <div class="addon-options hidden">
+                            <div class="form-group">
+                                <label>Add-On price</label>
+                                <div class="number-input">
+                                    <button class="decrease">-</button>
+                                    <input type="number" value="5.00" min="0" step="0.50">
+                                    <button class="increase">+</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Add-On Chips</label>
+                                <div class="number-input">
+                                    <button class="decrease">-</button>
+                                    <input type="number" value="5000" min="1000" step="1000">
+                                    <button class="increase">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-note">
+                        <span class="warning-icon">⚠</span>
+                        <span>Please note: The configured limits only take effect when <a href="#"
+                                class="track-players-link">Track Players</a> is also enabled</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <h2>Blind Structure</h2>
+                <div class="form-content hidden">
+                    <div class="blind-structure">
+                        <div class="default-values">
+                            <h3>Default Values</h3>
+                            <div class="info-text">
+                                <span class="info-icon">ℹ</span>
+                                <span>The following settings will help speeding up the blind configuration. These
+                                    default values will be used when adding new blind levels.</span>
+                            </div>
+
+                            <div class="default-grid">
+                                <div class="form-group">
+                                    <label>Duration Level</label>
+                                    <div class="number-input with-unit">
+                                        <button class="decrease">-</button>
+                                        <input type="number" value="15" min="1" step="1">
+                                        <button class="increase">+</button>
+                                        <span class="unit">min</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Duration Break</label>
+                                    <div class="number-input with-unit">
+                                        <button class="decrease">-</button>
+                                        <input type="number" value="10" min="1" step="1">
+                                        <button class="increase">+</button>
+                                        <span class="unit">min</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Ante</label>
+                                    <select class="ante-select">
+                                        <option value="big-blind">Big Blind Ante</option>
+                                        <option value="small-blind">Small Blind Ante</option>
+                                        <option value="Custom">Custom</option>
+                                        <option value="none">No Ante</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Blind increase</label>
+                                    <div class="number-input with-unit">
+                                        <button class="decrease">-</button>
+                                        <input type="number" value="25" min="1" max="100" step="5">
+                                        <button class="increase">+</button>
+                                        <span class="unit">%</span>
+                                    </div>
+                                    <small>When adding a blind level, increase the blinds at this %</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="blind-levels">
+                            <h3>Blind levels</h3>
+                            <div class="blind-actions">
+                                <button class="action-btn add-level">+ Level</button>
+                                <button class="action-btn add-break">+ Break</button>
+                                <button class="action-btn reset">Reset</button>
+                                <button class="action-btn save">💾 Lưu</button>
+                                <!-- <div class="auto-update">
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span>Auto Update Changed Fields</span>
+                                </div> -->
+                            </div>
+
+                            <div class="blind-table">
+                                <div class="table-header">
+                                    <div class="col">Level</div>
+                                    <div class="col">Duration</div>
+                                    <div class="col">Small Blind</div>
+                                    <div class="col">Big Blind</div>
+                                    <div class="col">Ante</div>
+                                    <div class="col">Color Up</div>
+                                    <div class="col">Action</div>
+                                </div>
+                                <div class="table-body">
+                                    <!-- Bảng sẽ được điền động bởi JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="blind-summary">
+                                <span class="duration">⏱ Total duration: 0:00 hours</span>
+                                <div class="summary-actions">
+                                    <button class="action-btn add-level">+ Level</button>
+                                    <button class="action-btn add-break">+ Break</button>
+                                    <!-- <button class="action-btn export">📤 Export Level Structure</button> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="next-btn">Next</button>
+        </div>
+    </div>
+    <script src="js/update-notification.js"></script>
+    <script src="js/tournament-info.js"></script>
+    <script src="js/reentries-addons.js"></script>
+    <script src="js/blind-structure.js"></script>
+    <script src="js/dashboard-ui.js"></script>
+    <script src="js/dashboard-players.js"></script>
+    <script src="js/dashboard-stats.js"></script>
+    <script src="js/dashboard-points.js"></script>
+    <script src="js/dashboard-controls.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

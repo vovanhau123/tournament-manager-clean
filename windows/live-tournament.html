@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live Tournament</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #000000;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        .tournament-title {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            flex-grow: 1;
+            padding: 0 40px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .level {
+            font-size: 72px;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .main-timer {
+            font-size: 180px;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'Digital-7', monospace;
+            color: #00ff00;
+        }
+
+        .blinds {
+            font-size: 48px;
+            margin: 40px 0;
+            font-weight: bold;
+        }
+
+        .next-blinds {
+            font-size: 24px;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stack-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stack-label {
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .stack-value {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        @font-face {
+            font-family: 'Digital-7';
+            src: url('fonts/digital-7.ttf') format('truetype');
+        }
+
+        .control-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .control-button:hover {
+            color: #00ff00;
+        }
+
+        /* Responsive styles */
+        @media screen and (max-width: 1366px) {
+            .tournament-title {
+                font-size: 36px;
+                margin-bottom: 20px;
+            }
+
+            .main-container {
+                grid-template-columns: 250px 1fr 250px;
+                padding: 0 20px;
+            }
+
+            .stat-label {
+                font-size: 20px;
+            }
+
+            .stat-value {
+                font-size: 36px;
+            }
+
+            .level {
+                font-size: 56px;
+                margin-bottom: 30px;
+            }
+
+            .main-timer {
+                font-size: 140px;
+            }
+
+            .blinds {
+                font-size: 36px;
+                margin: 30px 0;
+            }
+
+            .next-blinds {
+                font-size: 20px;
+            }
+
+            .stack-label {
+                font-size: 20px;
+            }
+
+            .stack-value {
+                font-size: 36px;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 200px 1fr 200px;
+                padding: 0 10px;
+                gap: 10px;
+            }
+
+            .stat-label {
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 32px;
+            }
+
+            .level {
+                font-size: 48px;
+                margin-bottom: 20px;
+            }
+
+            .main-timer {
+                font-size: 120px;
+            }
+
+            .blinds {
+                font-size: 32px;
+                margin: 20px 0;
+            }
+
+            .stack-label {
+                font-size: 18px;
+            }
+
+            .stack-value {
+                font-size: 32px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .tournament-title {
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .left-panel {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .center-panel {
+                padding: 10px;
+            }
+
+            .level {
+                font-size: 42px;
+            }
+
+            .main-timer {
+                font-size: 100px;
+            }
+
+            .blinds {
+                font-size: 28px;
+                margin: 15px 0;
+            }
+
+            .right-panel {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .tournament-title {
+                font-size: 24px;
+            }
+
+            .left-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .level {
+                font-size: 36px;
+            }
+
+            .main-timer {
+                font-size: 80px;
+            }
+
+            .blinds {
+                font-size: 24px;
+            }
+
+            .next-blinds {
+                font-size: 16px;
+            }
+
+            .right-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-group,
+            .stack-info {
+                text-align: center;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #000000;
+                color: white;
+            }
+
+            .main-timer {
+                color: #00ff00;
+            }
+
+            .control-button:hover {
+                color: #00ff00;
+            }
+        }
+
+        /* Animation for timer */
+        @keyframes timerPulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .main-timer {
+            animation: timerPulse 2s infinite;
+        }
+
+        /* Better touch targets for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .control-button {
+                padding: 10px;
+                margin: 5px;
+            }
+
+            .control-buttons {
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        /* Prevent text selection */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Smooth transitions */
+        .main-timer,
+        .blinds,
+        .level,
+        .stat-value,
+        .stack-value {
+            transition: all 0.3s ease;
+        }
+
+        /* Improved focus states for accessibility */
+        .control-button:focus {
+            outline: 2px solid #00ff00;
+            outline-offset: 2px;
+        }
+
+        /* Ensure content doesn't overflow */
+        .stat-value,
+        .stack-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* === Leaderboard Styles === */
+        .leaderboard-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .leaderboard-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .leaderboard-container {
+            width: 90%;
+            max-width: 1200px;
+            background-color: #1a1f2d;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+        }
+
+        .leaderboard-overlay.show .leaderboard-container {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .leaderboard-title {
+            font-size: 42px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #48bb78;
+            text-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 120px 120px 150px;
+            padding: 15px 10px;
+            background-color: #2c3347;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 120px 120px 150px;
+            padding: 15px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            color: #fff;
+            transition: background-color 0.3s ease;
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .leaderboard-row:nth-child(odd) {
+            background-color: rgba(44, 51, 71, 0.3);
+        }
+
+        .leaderboard-row:hover {
+            background-color: rgba(72, 187, 120, 0.1);
+        }
+
+        .lb-col {
+            padding: 0 10px;
+            text-align: center;
+        }
+
+        .lb-col.rank {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .lb-col.rank[data-rank="1"] {
+            color: gold;
+        }
+
+        .lb-col.rank[data-rank="2"] {
+            color: silver;
+        }
+
+        .lb-col.rank[data-rank="3"] {
+            color: #cd7f32;
+            /* bronze */
+        }
+
+        .lb-col.player {
+            text-align: left;
+            font-weight: 500;
+            font-size: 20px;
+        }
+
+        .lb-col.points {
+            font-weight: bold;
+            color: #48bb78;
+            font-size: 22px;
+        }
+
+        .lb-col.status .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .lb-col.status .status-playing {
+            background-color: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+
+        .lb-col.status .status-eliminated {
+            background-color: rgba(229, 62, 62, 0.2);
+            color: #e53e3e;
+        }
+
+        .leaderboard-footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive leaderboard */
+        @media screen and (max-width: 768px) {
+
+            .leaderboard-header,
+            .leaderboard-row {
+                grid-template-columns: 60px 1fr 100px 100px;
+            }
+
+            .lb-col.tour,
+            .lb-col.status {
+                display: none;
+            }
+
+            .leaderboard-title {
+                font-size: 32px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+
+            .leaderboard-header,
+            .leaderboard-row {
+                grid-template-columns: 40px 1fr 80px;
+            }
+
+            .lb-col.sng,
+            .lb-col.tour,
+            .lb-col.status {
+                display: none;
+            }
+
+            .leaderboard-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="control-buttons">
+        <button class="control-button minimize-button">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="control-button fullscreen-button">
+            <i class="fas fa-expand"></i>
+        </button>
+    </div>
+
+    <div class="tournament-title">SPADES MULTIDAY - DAY 1</div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="stat-group">
+                <div class="stat-label">PLAYERS</div>
+                <div class="stat-value"></div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">AVG. STACK</div>
+                <div class="stat-value"></div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">TOTAL STACK</div>
+                <div class="stat-value"></div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">BUY IN</div>
+                <div class="stat-value"></div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">REBUY</div>
+                <div class="stat-value"></div>
+            </div>
+        </div>
+
+        <div class="center-panel">
+            <div class="level"></div>
+            <div class="main-timer">00:00</div>
+            <div class="blinds"></div>
+            <div class="ante"></div>
+            <div class="next-blinds"></div>
+        </div>
+
+        <div class="right-panel">
+            <div class="stack-info">
+                <div class="stack-label">STARTING STACK</div>
+                <div class="stack-value"></div>
+            </div>
+            <div class="stack-info">
+                <div class="stack-label">REBUY STACK</div>
+                <div class="stack-value"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng điểm sẽ hiển thị khi nhận lệnh từ dashboard -->
+    <div class="leaderboard-overlay">
+        <div class="leaderboard-container">
+            <h1 class="leaderboard-title">BẢNG XẾP HẠNG</h1>
+            <div class="leaderboard-table">
+                <div class="leaderboard-header">
+                    <div class="lb-col rank">Hạng</div>
+                    <div class="lb-col player">Người chơi</div>
+                    <div class="lb-col sng">Win S&G</div>
+                    <div class="lb-col tour">Win Tour</div>
+                    <div class="lb-col points">Điểm</div>
+                    <div class="lb-col status">Trạng thái</div>
+                </div>
+                <div class="leaderboard-body">
+                    <!-- Dữ liệu người chơi sẽ được thêm vào đây bằng JavaScript -->
+                </div>
+            </div>
+            <div class="leaderboard-footer">
+                <div class="footer-text">Poker Tournament Manager</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/live-tournament.js" type="module"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        // Xử lý nhận màu nền từ dashboard
+        window.api.onBackgroundColorChange((color) => {
+            console.log('Nhận màu nền từ dashboard:', color);
+            document.body.style.backgroundColor = color;
+
+            // Lưu màu vào localStorage để giữ nguyên khi tải lại trang
+            localStorage.setItem('liveTournamentBackgroundColor', color);
+        });
+
+        // Khôi phục màu nền từ localStorage khi tải trang (nếu có)
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedColor = localStorage.getItem('liveTournamentBackgroundColor');
+            if (savedColor) {
+                document.body.style.backgroundColor = savedColor;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+my-electron-app/
+├── package.json
+├── main.js
+├── preload.js
+├── windows/
+│   ├── main-window/
+│   │   ├── index.html
+│   │   ├── renderer.js
+│   │   └── styles.css
+│   ├── settings-window/
+│   │   ├── index.html
+│   │   ├── renderer.js
+│   │   └── styles.css
+│   └── other-window/
+│       ├── index.html
+│       ├── renderer.js
+│       └── styles.css
+├── shared/
+│   ├── utils.js
+│   ├── constants.js
+│   └── styles/
+│       └── common.css
+├── assets/
+│   ├── icons/
+│   └── images/
+├── node_modules/
+└── dist/
+
+
+   set GH_TOKEN=your_github_token
+   npm run publish

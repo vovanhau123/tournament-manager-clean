@@ -1,0 +1,58 @@
+{
+  "name": "tournament-manager",
+  "version": "1.0.1",
+  "description": "Ứng dụng quản lý giải đấu",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-css": "npx sass src/styles/main.scss dist/styles/main.css",
+    "watch-css": "npx sass --watch src/styles/main.scss dist/styles/main.css",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "publish": "electron-builder build --win --publish always"
+  },
+  "build": {
+    "appId": "com.yourcompany.electron-integrated-api",
+    "productName": "Ứng dụng quản lý giải đấu",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "node_modules/**/*",
+      "windows/**/*",
+      "assets/**/*",
+      "js/**/*",
+      "css/**/*",
+      "server/**/*",
+      "database/**/*",
+      "doc/**/*",
+      "modules/**/*",
+      "*.js",
+      "*.html",
+      "*.json",
+      "*.md"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "vovanhau123",
+        "repo": "tournament-manager-new",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "axios": "^1.8.4",
+    "electron-log": "^5.3.3",
+    "electron-updater": "^6.6.2",
+    "sql.js": "^1.13.0"
+  }
+}
