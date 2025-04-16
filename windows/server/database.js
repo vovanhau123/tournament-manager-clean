@@ -374,12 +374,12 @@ async function getTournamentStats(tournamentId) {
 }
 
 module.exports = {
-    initDatabavvfse,
+    initDatabase,
     getDatabase,
-    executvvvveQuery,bgg
-    executeQuvvveries,
-    save vvDatabase,bgggg
-    exbvvecSQL,gf
-    updateTourvvvnamentStats,vvv
-    getTournabbmentStatsggb
+    executeQuery,
+    executeQueries,
+    saveDatabase,
+    execSQL,
+    updateTournamentStats,
+    getTournamentStats
 };
