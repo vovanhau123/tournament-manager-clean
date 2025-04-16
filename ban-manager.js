@@ -6,7 +6,7 @@ const { app } = require('electron');
 
 class BanManager {
     constructor() {
-        this.apiKey = '';
+        this.apiKey = 'pk_live_hKSnv7AEqDRDG6ttw3hFmlhuj8h7wNfkQgfwoN5V';
         // Sử dụng Buffer để đảm bảo độ dài key đúng 32 bytes
         this.encryptionKey = crypto.scryptSync('your-secret-key', 'salt', 32);
         this.signatureKey = crypto.scryptSync('your-signature-key', 'salt', 32);
