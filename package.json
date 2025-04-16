@@ -1,6 +1,6 @@
 {
   "name": "tournament-manager",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ứng dụng quản lý giải đấu",
   "main": "main.js",
   "scripts": {
@@ -25,6 +25,7 @@
       "assets/**/*",
       "js/**/*",
       "css/**/*",
+      "api/**/*",
       "server/**/*",
       "database/**/*",
       "doc/**/*",

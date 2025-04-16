@@ -1,4 +1,11 @@
-# Build files
+# Build output
 build/
 dist/
 *.exe
+node_modules/
+*.old
+*.zip
+*.7z
+*.tar
+*.gz
+*.bz2

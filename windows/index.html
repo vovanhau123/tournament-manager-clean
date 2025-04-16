@@ -4,15 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poker Pro - v1.0.2</title>
+    <title>Poker Pro - v1.0.3</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/forms.css">
     <link rel="stylesheet" href="css/notifications.css">
+    <link rel="stylesheet" href="css/warranty.css">
 </head>
 
 <body>
     <div class="container">
-        <h1 class="title">Poker Pro</h1>
+        <div class="title-container">
+            <h1 class="title">Poker Pro <span class="warranty-icon" id="showWarrantyBtn" title="Phiếu bảo hành">i</span>
+            </h1>
+        </div>
 
         <div class="steps-container">
             <div class="step active">
@@ -248,6 +252,80 @@
             </div>
         </div>
 
+
+
+        <!-- Phiếu bảo hành popup -->
+        <div id="warrantyPopup" class="warranty-popup">
+            <div class="warranty-certificate">
+                <div class="warranty-header">
+                    <div class="company-info">
+                        <h2>Company Name</h2>
+                        <p>Address</p>
+                        <p>Phone</p>
+                        <p>Email</p>
+                    </div>
+                    <div class="warranty-title">
+                        <h1>Warranty Certificate</h1>
+                    </div>
+                </div>
+
+                <div class="warranty-stamp">
+                    <img src="assets/moc.png" alt="Warranty Stamp" class="stamp-image">
+                </div>
+
+                <div class="warranty-customer-info">
+                    <div class="info-row">
+                        <span>Customer Name</span>
+                        <span class="info-line" id="customerNameDisplay">_________________</span>
+                    </div>
+                    <div class="info-row full-width">
+                        <span>Address</span>
+                        <span class="info-line" id="addressDisplay">_________________</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Model No.</span>
+                        <span class="info-line" id="modelDisplay">_________</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Serial No.</span>
+                        <span class="info-line" id="serialDisplay">_________</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Manufacturer</span>
+                        <span class="info-line" id="manufacturerDisplay">_________________</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Start Date</span>
+                        <span class="info-line" id="startDateDisplay">_____</span>
+                    </div>
+                    <div class="info-row">
+                        <span>End Date</span>
+                        <span class="info-line" id="endDateDisplay">_____</span>
+                    </div>
+                </div>
+
+                <div class="warranty-terms">
+                    <p>We hereby guarantee and warrant all products owned. for the period time the product in possession
+                        of the owner XYZ Limited will repair and replace defective component which will be no additional
+                        charge to the product owner.</p>
+                </div>
+
+                <div class="warranty-footer">
+                    <div class="date-section">
+                        <span>Date</span>
+                        <span class="info-line">_________________</span>
+                    </div>
+                    <div class="signature-section">
+                        <span>Signature</span>
+                        <span class="info-line">_________________</span>
+                    </div>
+                </div>
+
+                <button id="closeWarrantyBtn" class="close-warranty">×</button>
+                <button id="printWarrantyBtn" class="print-warranty">In phiếu bảo hành</button>
+            </div>
+        </div>
+
         <div class="navigation">
             <button class="next-btn">Next</button>
         </div>
@@ -256,6 +334,8 @@
     <script src="js/tournament-info.js"></script>
     <script src="js/reentries-addons.js"></script>
     <script src="js/blind-structure.js"></script>
+    <script src="js/warranty-service.js"></script>
+    <script src="js/warranty-certificate.js"></script>
     <script src="js/dashboard-ui.js"></script>
     <script src="js/dashboard-players.js"></script>
     <script src="js/dashboard-stats.js"></script>

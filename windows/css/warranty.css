@@ -1,0 +1,973 @@
+/* CSS cho phiếu bảo hành */
+.title-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.warranty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #4c9eff;
+    color: white;
+    border-radius: 50%;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin-left: 8px;
+    position: relative;
+    z-index: 10;
+    vertical-align: middle;
+    top: -2px;
+}
+
+.warranty-icon:hover {
+    background-color: #3a7fd9;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.warranty-icon:after {
+    content: 'Phiếu bảo hành';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.warranty-icon:hover:after {
+    opacity: 1;
+}
+
+.warranty-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.warranty-certificate {
+    position: relative;
+    width: 750px;
+    max-width: 100%;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    margin: auto;
+    background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%),
+        url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 0 L100 50 L50 100 L0 50 Z" fill="%234c9eff" fill-opacity="0.03"/></svg>');
+    background-size: cover, 100px 100px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: visible;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.warranty-certificate::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(76, 158, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(30px);
+}
+
+.warranty-certificate::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    width: 80px;
+    height: 80px;
+    background-color: rgba(76, 158, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(20px);
+}
+
+.warranty-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2c3e50;
+    overflow: hidden;
+}
+
+.warranty-header::before,
+.warranty-header::after {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 50px;
+    background: linear-gradient(135deg, #2c3e50 0%, #4c9eff 100%);
+    z-index: -1;
+    opacity: 0.9;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.warranty-header::before {
+    top: -20px;
+    left: -20px;
+    transform: skewY(-5deg);
+    border-top-left-radius: 15px;
+    background-size: 200% 200%;
+    animation: gradientAnimation 10s ease infinite;
+}
+
+.warranty-header::after {
+    bottom: -20px;
+    right: -20px;
+    transform: skewY(5deg);
+    border-bottom-right-radius: 15px;
+    background-size: 200% 200%;
+    animation: gradientAnimation 10s ease infinite reverse;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.company-info {
+    text-align: left;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transform: translateZ(0);
+    transition: all 0.3s ease;
+    flex: 1;
+    max-width: 45%;
+}
+
+.company-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.company-info h2 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: inline-block;
+}
+
+.company-info h2::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #4c9eff, transparent);
+}
+
+.company-info p {
+    margin: 5px 0;
+    color: #444;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.warranty-title {
+    text-align: right;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transform: translateZ(0);
+    transition: all 0.3s ease;
+    flex: 1;
+    max-width: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.warranty-title:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.warranty-title h1 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+    letter-spacing: 1px;
+    position: relative;
+    display: inline-block;
+}
+
+.warranty-title h1::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4c9eff);
+}
+
+.warranty-stamp {
+    position: absolute;
+    right: 20px;
+    top: 120px;
+    width: 120px;
+    height: 120px;
+    opacity: 0.9;
+    transform: rotate(-15deg);
+    animation: pulse 3s infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.4));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stamp-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+@keyframes pulse {
+    0% {
+        transform: rotate(-15deg) scale(1);
+    }
+
+    50% {
+        transform: rotate(-15deg) scale(1.05);
+    }
+
+    100% {
+        transform: rotate(-15deg) scale(1);
+    }
+}
+
+.warranty-customer-info {
+    margin: 0.5rem 0 1.5rem 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.warranty-customer-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.warranty-customer-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(76, 158, 255, 0.1) 0%, transparent 100%);
+    z-index: -1;
+    border-radius: 10px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.info-row:hover {
+    transform: translateX(3px);
+}
+
+.info-row span {
+    margin-right: 8px;
+    font-weight: bold;
+    color: #2c3e50;
+    position: relative;
+    font-size: 0.85rem;
+}
+
+.info-row span:first-child::before {
+    content: '•';
+    position: absolute;
+    left: -12px;
+    color: #4c9eff;
+    font-size: 1rem;
+}
+
+.info-line {
+    display: inline-block;
+    min-width: 120px;
+    border-bottom: 1px solid rgba(76, 158, 255, 0.5);
+    margin-right: 10px;
+    font-weight: normal;
+    color: #444;
+    padding-bottom: 2px;
+    font-style: italic;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.info-line:hover {
+    border-bottom-color: #4c9eff;
+    color: #2c3e50;
+}
+
+/* Thêm class cho các info-row dài */
+.info-row.full-width {
+    grid-column: span 2;
+}
+
+.warranty-terms {
+    margin: 1rem 0;
+    text-align: center;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    line-height: 1.5;
+    font-size: 0.9rem;
+    color: #333;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.warranty-terms:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.warranty-terms::before {
+    content: '\201C';
+    /* Opening quotation mark */
+    position: absolute;
+    top: -15px;
+    left: 5px;
+    font-size: 80px;
+    color: rgba(76, 158, 255, 0.1);
+    font-family: Georgia, serif;
+}
+
+.warranty-terms::after {
+    content: '\201D';
+    /* Closing quotation mark */
+    position: absolute;
+    bottom: -60px;
+    right: 5px;
+    font-size: 80px;
+    color: rgba(76, 158, 255, 0.1);
+    font-family: Georgia, serif;
+}
+
+.warranty-terms p {
+    margin: 0;
+    text-align: justify;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+}
+
+.warranty-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(76, 158, 255, 0.3);
+    position: relative;
+}
+
+.warranty-footer::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(76, 158, 255, 0.5), transparent);
+}
+
+.signature-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.signature-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.signature-section::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #4c9eff, transparent);
+}
+
+.date-section,
+.signature-section {
+    display: flex;
+    flex-direction: column;
+    margin-right: 1rem;
+    min-width: 150px;
+}
+
+.date-section span:first-child,
+.signature-section span:first-child {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    position: relative;
+    font-size: 0.85rem;
+}
+
+.date-section span:first-child::before,
+.signature-section span:first-child::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    background-color: #4c9eff;
+    border-radius: 50%;
+    transform: translateY(-50%);
+}
+
+.date-section .info-line,
+.signature-section .info-line {
+    min-width: 100px;
+}
+
+.close-warranty {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #333;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    line-height: 0;
+    padding: 0;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.close-warranty:hover {
+    background-color: #ff5252;
+    color: white;
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 3px 10px rgba(255, 82, 82, 0.4);
+}
+
+.close-warranty:active {
+    transform: rotate(90deg) scale(0.95);
+}
+
+.print-warranty {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #4c9eff 0%, #3a7fd9 100%);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    box-shadow: 0 3px 8px rgba(76, 158, 255, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 10;
+}
+
+.print-warranty::before {
+    content: '🖨️';
+    font-size: 1rem;
+}
+
+.print-warranty:hover {
+    background: linear-gradient(135deg, #3a7fd9 0%, #2c6bc0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(76, 158, 255, 0.4);
+}
+
+.print-warranty:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(76, 158, 255, 0.3);
+}
+
+/* Hiệu ứng khi hiển thị phiếu bảo hành */
+.warranty-popup.show {
+    display: flex;
+    animation: fadeIn 0.5s cubic-bezier(0.26, 0.53, 0.74, 1.48);
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Hiệu ứng khi ẩn phiếu bảo hành */
+.warranty-popup.hide {
+    animation: fadeOut 0.4s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Hiệu ứng cho phiếu bảo hành khi hiển thị */
+.warranty-popup.show .warranty-certificate {
+    animation: popIn 0.7s cubic-bezier(0.26, 0.53, 0.74, 1.48);
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+    }
+
+    60% {
+        transform: scale(1.05) translateY(-10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Hiệu ứng cho phiếu bảo hành khi ẩn */
+.warranty-popup.hide .warranty-certificate {
+    animation: popOut 0.5s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards;
+}
+
+@keyframes popOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+    }
+}
+
+/* Responsive cho phiếu bảo hành */
+@media screen and (max-width: 1200px) {
+    .warranty-popup {
+        padding: 25px;
+    }
+
+    .warranty-certificate {
+        width: 700px;
+        padding: 2rem;
+        margin: 25px auto;
+    }
+
+    .warranty-customer-info {
+        margin-left: 160px;
+    }
+
+    .warranty-stamp {
+        width: 120px;
+        height: 120px;
+        left: 50px;
+        top: 160px;
+    }
+
+    .warranty-terms {
+        padding: 20px;
+    }
+
+    .signature-section {
+        padding: 15px;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .warranty-popup {
+        padding: 20px;
+        align-items: flex-start;
+    }
+
+    .warranty-certificate {
+        width: 90%;
+        max-width: 600px;
+        padding: 1.8rem;
+        margin: 20px auto;
+    }
+
+    .warranty-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.2rem;
+        padding-bottom: 1.2rem;
+    }
+
+    .company-info,
+    .warranty-title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .company-info h2::after,
+    .warranty-title h1::after {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+    }
+
+    .warranty-stamp {
+        position: relative;
+        left: auto;
+        top: auto;
+        width: 110px;
+        height: 110px;
+        margin: 1.2rem auto;
+        display: block;
+    }
+
+    .warranty-customer-info {
+        margin-left: 0;
+        margin-top: 1rem;
+        padding: 18px;
+    }
+
+    .info-row {
+        justify-content: flex-start;
+    }
+
+    .info-row span:first-child::before {
+        left: -12px;
+    }
+
+    .warranty-footer {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 2.5rem;
+    }
+
+    .signature-section {
+        margin-top: 1.2rem;
+        width: 100%;
+        text-align: center;
+        max-width: 400px;
+    }
+
+    .print-warranty {
+        bottom: 15px;
+        right: 15px;
+        padding: 0.6rem 1.2rem;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .warranty-popup {
+        padding: 15px;
+    }
+
+    .warranty-certificate {
+        padding: 1rem;
+        margin: 0;
+        border-radius: 10px;
+    }
+
+    .warranty-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .company-info h2 {
+        font-size: 1.1rem;
+    }
+
+    .warranty-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+    }
+
+    .warranty-header::before,
+    .warranty-header::after {
+        height: 30px;
+    }
+
+    .warranty-customer-info {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 10px;
+        margin-top: 0.5rem;
+    }
+
+    .info-row.full-width {
+        grid-column: 1;
+    }
+
+    .info-row {
+        margin-bottom: 0.6rem;
+    }
+
+    .info-line {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .warranty-terms {
+        padding: 0.8rem;
+        font-size: 0.8rem;
+        margin: 0.8rem 0;
+    }
+
+    .warranty-terms::before,
+    .warranty-terms::after {
+        font-size: 60px;
+    }
+
+    .warranty-stamp {
+        width: 70px;
+        height: 70px;
+        right: 10px;
+        top: 100px;
+    }
+
+    .warranty-footer {
+        flex-direction: column;
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+    }
+
+    .date-section,
+    .signature-section {
+        min-width: auto;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        padding: 8px;
+    }
+
+    .close-warranty {
+        top: 5px;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        font-size: 1.2rem;
+    }
+
+    .print-warranty {
+        width: calc(100% - 10px);
+        bottom: 5px;
+        right: 5px;
+        border-radius: 5px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .print-warranty::before {
+        font-size: 0.9rem;
+    }
+}
+
+/* Màn hình rất nhỏ */
+@media screen and (max-width: 400px) {
+    .warranty-popup {
+        padding: 10px;
+    }
+
+    .warranty-certificate {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .warranty-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+    }
+
+    .company-info,
+    .warranty-title {
+        padding: 10px;
+    }
+
+    .company-info h2 {
+        font-size: 1.1rem;
+    }
+
+    .warranty-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .warranty-stamp {
+        width: 70px;
+        height: 70px;
+        top: 110px;
+    }
+
+    .warranty-customer-info {
+        margin-top: 70px;
+        padding: 12px;
+    }
+
+    .info-row span {
+        font-size: 0.9rem;
+    }
+
+    .info-line {
+        font-size: 0.9rem;
+    }
+
+    .warranty-terms {
+        padding: 12px;
+        font-size: 0.8rem;
+        margin: 1rem 0;
+    }
+
+    .warranty-terms::before,
+    .warranty-terms::after {
+        font-size: 60px;
+    }
+
+    .date-section,
+    .signature-section {
+        padding: 10px;
+    }
+
+    .close-warranty {
+        width: 28px;
+        height: 28px;
+        font-size: 1.3rem;
+    }
+
+    .print-warranty {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Định dạng cho in */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .warranty-certificate,
+    .warranty-certificate * {
+        visibility: visible;
+    }
+
+    .warranty-certificate {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: none;
+    }
+
+    .close-warranty,
+    .print-warranty {
+        display: none;
+    }
+}

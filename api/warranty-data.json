@@ -1,0 +1,49 @@
+{
+  "company": {
+    "name": "Poker Pro Vietnam",
+    "address": "Quận 7, TP.HCM",
+    "phone": "+84 91 5055 660",
+    "email": "support@dichvuweb.store",
+    "website": "www.dichvuweb.store"
+  },
+  "warranty": {
+    "title": "Phiếu Bảo Hành",
+    "subtitle": "Chứng nhận bảo hành sản phẩm chính hãng",
+    "terms": "Chúng tôi cam kết bảo hành tất cả các sản phẩm của Poker Pro trong thời gian sở hữu của khách hàng. Poker Pro Vietnam sẽ sửa chữa và thay thế các linh kiện bị lỗi mà không tính thêm phí cho chủ sở hữu sản phẩm. Vui lòng giữ phiếu bảo hành này để được hỗ trợ khi cần thiết.",
+    "validity": "6 tháng kể từ ngày thanh toán",
+    "conditions": [
+      "Sản phẩm còn nguyên tem bảo hành",
+      "Không áp dụng cho các trường hợp hư hỏng do người dùng",
+      "Bảo hành không bao gồm phí vận chuyển",
+      "Liên hệ trực tiếp với chúng tôi để được hỗ trợ"
+    ]
+  },
+  "customer": {
+    "name": "Nguyễn Tuấn Vũ",
+    "address": "Quận tân bình, TP.HCM",
+    "phone": "+84 34 7118 188",
+    "email": "NA/N"
+  },
+  "product": {
+    "name": "Bộ Chip Poker Pro Premium",
+    "model": "PP-2025",
+    "serial": "PKP-18866233NTV",
+    "manufacturer": "Poker Pro International",
+    "purchaseDate": "2025-04-15",
+    "warrantyStartDate": "2025-04-15",
+    "warrantyEndDate": "2025-10-15"
+  },
+  "signatures": {
+    "customerName": "Nguyễn Văn A",
+    "sellerName": "Trần Thị B",
+    "sellerPosition": "Đại diện bán hàng",
+    "date": "15/10/2023"
+  },
+  "additionalInfo": {
+    "supportCenter": "Trung tâm bảo hành",
+    "supportAddress": "Quận 7, TP.HCM",
+    "supportHotline": "0915055660",
+    "supportEmail": "support@dichvuweb.store",
+    "supportHours": "8:00 - 17:30 (Thứ 2 - Thứ 6)"
+  }
+}
