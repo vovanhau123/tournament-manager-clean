@@ -278,8 +278,8 @@ If you encounter any issues or have questions about the application, please cont
 **Tiếng Việt:**
 Nếu bạn gặp vấn đề hoặc có câu hỏi về ứng dụng, vui lòng liên hệ với chúng tôi qua:
 
-- Email: support@pokerpro.com
-- Website: https://pokerpro.com/support
+- Email: support@dichvuweb.store
+- Website: [https://pokerpro.com/support](https://jason.io.vn/)
 - GitHub: https://github.com/vovanhau123/tournament-manager-clean
 
 ## License | Giấy Phép
